@@ -26,6 +26,11 @@ const authors = [
   { id: 4, name: 'George Orwell' },
 ];
 
+/**
+ * NOTE: the reason why fields is returning an anonymous function rather than the object itself is because it uses AuthorType that is defined after being used
+ * same goes for AutorType fields: if we bring that up (before BookType is defined), than it'll throw an error saying that BookType is not defined.
+ */
+
 const BookType = new GraphQLObjectType({
   name: 'Book',
   description: 'Book name',
@@ -92,8 +97,33 @@ const RootQueryType = new GraphQLObjectType({
   }),
 });
 
+const RootMutationType = new GraphQLObjectType({
+  name: 'Mutation',
+  description: 'Mutation Root',
+  fields: () => ({
+    addBook: {
+      type: BookType,
+      description: 'Add new book',
+      args: {
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        authorId: { type: new GraphQLNonNull(GraphQLInt) },
+      },
+      resolve: (parent, args) => {
+        const newBook = {
+          id: books.length + 1,
+          name: args.name,
+          authorId: args.authorId,
+        };
+        books.push(newBook);
+        return newBook;
+      },
+    },
+  }),
+});
+
 const schema = new GraphQLSchema({
   query: RootQueryType,
+  mutation: RootMutationType,
 });
 
 /**
